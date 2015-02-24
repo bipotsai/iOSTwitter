@@ -7,6 +7,15 @@
 //
 
 #import "AppDelegate.h"
+#import "LoginViewController.h"
+#import "TweetsViewController.h"
+#import "TwitterClient.h"
+#import "User.h"
+#import "Tweet.h"
+
+// http://stackoverflow.com/questions/1560081/how-can-i-create-a-uicolor-from-a-hex-string
+#define UIColorFromRGB(rgbValue) [UIColor colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0 green:((float)((rgbValue & 0xFF00) >> 8))/255.0 blue:((float)(rgbValue & 0xFF))/255.0 alpha:1.0]
+
 
 @interface AppDelegate ()
 
@@ -17,6 +26,38 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
   // Override point for customization after application launch.
+  
+  self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+
+  [[UINavigationBar appearance] setBarTintColor:UIColorFromRGB(0x55ACEE)];
+  [[UINavigationBar appearance] setTranslucent:NO];
+  [[UINavigationBar appearance] setTintColor:[UIColor whiteColor]];
+  [[UINavigationBar appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName : [UIColor whiteColor]}];
+  
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userDidLogout) name:UserDidLogoutNotification object:nil];
+  
+  User *user = [User currentUser];
+  UIViewController *vc;
+  
+  if (user != nil) {
+    vc = [[TweetsViewController alloc] init];
+  } else {
+    vc = [[LoginViewController alloc] init];
+  }
+  
+  UINavigationController *nvc = [[UINavigationController alloc] initWithRootViewController:vc];
+  self.window.rootViewController = nvc;
+  [self.window makeKeyAndVisible];
+  
+  return YES;
+}
+
+- (void)userDidLogout {
+  self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[[LoginViewController alloc] init]];
+}
+
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation{
+  [[TwitterClient sharedInstance] openURL:url];
   return YES;
 }
 
